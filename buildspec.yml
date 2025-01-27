@@ -14,7 +14,7 @@ phases:
       java: corretto11
     commands:
       - echo "Installing Maven and setting up CodeArtifact..."
-      - aws codeartifact login --tool maven --domain $HOST --domain-owner $ORGANIZATION --repository $PROJECT --region us-east-1
+      - aws codeartifact login --tool maven --domain $HOST --domain-owner $ORGANIZATION --repository $PROJECT --region us-west-2
       - mvn --version
 
   pre_build:
