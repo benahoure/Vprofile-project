@@ -1,0 +1,56 @@
+version: 0.2
+
+env:
+  parameter-store:
+    SONAR_TOKEN: "SONARTOKEN"
+    NEXUS_CREDENTIAL_ID: "CODEARTIFACT_TOKEN"
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto11
+    commands:
+      - echo "Installing dependencies..."
+      - mvn --version
+      - echo "Dependencies installed."
+
+  pre_build:
+    commands:
+      - echo "Preparing environment variables..."
+      - export SONAR_TOKEN=$(aws ssm get-parameter --name SONARTOKEN --with-decryption --query Parameter.Value --output text)
+      - echo "Sonar Token loaded."
+
+  build:
+    commands:
+      - echo "Starting build process..."
+      - mvn clean install -DskipTests
+      - echo "Running unit tests..."
+      - mvn test
+      - echo "Running integration tests..."
+      - mvn verify -DskipUnitTests
+      - echo "Performing static code analysis with Checkstyle..."
+      - mvn checkstyle:checkstyle
+      - echo "Uploading to SonarCloud..."
+      - sonar-scanner \
+        -Dsonar.projectKey=vprofile \
+        -Dsonar.projectName=vprofile-repo \
+        -Dsonar.projectVersion=1.0 \
+        -Dsonar.sources=src/ \
+        -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
+        -Dsonar.junit.reportsPath=target/surefire-reports/ \
+        -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+        -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml \
+        -Dsonar.login=$SONAR_TOKEN
+      - echo "Waiting for SonarCloud Quality Gate..."
+      - timeout 600 sonar-quality-gate-checker --abort-on-failure
+
+  post_build:
+    commands:
+      - echo "Publishing artifacts to Nexus Repository..."
+      - mvn deploy -DaltDeploymentRepository=releases::default::http://$NEXUS_URL/$NEXUS_REPOSITORY
+      - echo "Artifacts successfully published."
+
+  artifacts:
+    base-directory: target
+    files:
+      - "**/*"
