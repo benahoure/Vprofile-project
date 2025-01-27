@@ -50,7 +50,7 @@ phases:
       - mvn deploy -DaltDeploymentRepository=releases::default::http://$NEXUS_URL/$NEXUS_REPOSITORY
       - echo "Artifacts successfully published."
 
-  artifacts:
-    base-directory: target
-    files:
-      - "**/*"
+artifacts:
+  base-directory: target
+  files:
+    - "**/*"
