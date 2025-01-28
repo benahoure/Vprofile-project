@@ -4,23 +4,20 @@ phases:
   pre_build:
     commands:
       - echo "Installing dependencies and retrieving environment variables from SSM Parameter Store..."
-      # Install AWS CLI v2 if not pre-installed
       - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
       - unzip awscliv2.zip
       - sudo ./aws/install
-      # Retrieve parameters from SSM
-      - CODEARTIFACT_TOKEN=$(aws ssm get-parameter --name "CODEARTIFACT_TOKEN" --with-decryption --query "Parameter.Value" --output text)
-      - HOST=$(aws ssm get-parameter --name "HOST" --query "Parameter.Value" --output text)
-      - ORGANIZATION=$(aws ssm get-parameter --name "ORGANIZATION" --query "Parameter.Value" --output text)
-      - PROJECT=$(aws ssm get-parameter --name "PROJECT" --query "Parameter.Value" --output text)
-      - SONARTOKEN=$(aws ssm get-parameter --name "SONARTOKEN" --with-decryption --query "Parameter.Value" --output text)
-      # Confirm variables are loaded
+      - echo "Retrieving parameters from SSM..."
+      - export CODEARTIFACT_TOKEN=$(aws ssm get-parameter --name "CODEARTIFACT_TOKEN" --with-decryption --query "Parameter.Value" --output text)
+      - export HOST=$(aws ssm get-parameter --name "HOST" --query "Parameter.Value" --output text)
+      - export ORGANIZATION=$(aws ssm get-parameter --name "ORGANIZATION" --query "Parameter.Value" --output text)
+      - export PROJECT=$(aws ssm get-parameter --name "PROJECT" --query "Parameter.Value" --output text)
+      - export SONARTOKEN=$(aws ssm get-parameter --name "SONARTOKEN" --with-decryption --query "Parameter.Value" --output text)
       - echo "Parameters retrieved: HOST=$HOST, ORGANIZATION=$ORGANIZATION, PROJECT=$PROJECT"
 
   build:
     commands:
       - echo "Running SonarQube Code Analysis..."
-      # Run SonarScanner with the required variables
       - mvn sonar:sonar \
         -Dsonar.host.url=$HOST \
         -Dsonar.organization="$ORGANIZATION" \
