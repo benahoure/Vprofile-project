@@ -38,11 +38,7 @@ phases:
   build:
     commands:
       - echo "Running SonarQube Code Analysis..."
-      - mvn sonar:sonar \
-        -Dsonar.host.url="$HOST" \
-        -Dsonar.organization="$ORGANIZATION" \
-        -Dsonar.projectKey="$PROJECT" \
-        -Dsonar.login="$SONAR_TOKEN"
+      - mvn sonar:sonar -Dsonar.host.url="$HOST" -Dsonar.organization="$ORGANIZATION" -Dsonar.projectKey="$PROJECT" -Dsonar.login="$SONAR_TOKEN"
 
 artifacts:
   files:
