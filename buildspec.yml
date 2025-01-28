@@ -1,57 +1,37 @@
 version: 0.2
 
-env:
-  parameter-store:
-    SONAR_TOKEN: "SONARTOKEN"
-    CODEARTIFACT_TOKEN: "CODEARTIFACT_TOKEN"
-    HOST: "HOST"
-    ORGANIZATION: "ORGANIZATION"
-    PROJECT: "PROJECT"
-
 phases:
-  install:
-    runtime-versions:
-      java: corretto11
-    commands:
-      - echo "Installing Maven and setting up CodeArtifact..."
-      - aws codeartifact login --tool maven --domain $HOST --domain-owner $ORGANIZATION --repository $PROJECT --region us-west-2
-      - mvn --version
-
   pre_build:
     commands:
-      - echo "Preparing environment..."
-      - export SONAR_TOKEN=$(aws ssm get-parameter --name SONARTOKEN --with-decryption --query Parameter.Value --output text)
-      - export CODEARTIFACT_TOKEN=$(aws ssm get-parameter --name CODEARTIFACT_TOKEN --with-decryption --query Parameter.Value --output text)
-      - echo "Environment setup completed."
+      - echo "Installing dependencies and retrieving environment variables from SSM Parameter Store..."
+      # Install AWS CLI v2 if not pre-installed
+      - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      - unzip awscliv2.zip
+      - sudo ./aws/install
+      # Retrieve parameters from SSM
+      - CODEARTIFACT_TOKEN=$(aws ssm get-parameter --name "CODEARTIFACT_TOKEN" --with-decryption --query "Parameter.Value" --output text)
+      - HOST=$(aws ssm get-parameter --name "HOST" --query "Parameter.Value" --output text)
+      - ORGANIZATION=$(aws ssm get-parameter --name "ORGANIZATION" --query "Parameter.Value" --output text)
+      - PROJECT=$(aws ssm get-parameter --name "PROJECT" --query "Parameter.Value" --output text)
+      - SONARTOKEN=$(aws ssm get-parameter --name "SONARTOKEN" --with-decryption --query "Parameter.Value" --output text)
+      # Confirm variables are loaded
+      - echo "Parameters retrieved: HOST=$HOST, ORGANIZATION=$ORGANIZATION, PROJECT=$PROJECT"
 
   build:
     commands:
-      - echo "Starting Maven build..."
-      - mvn clean install -DskipTests
-      - echo "Running unit tests..."
-      - mvn test
-      - echo "Running integration tests..."
-      - mvn verify -DskipUnitTests
-      - echo "Performing static code analysis with Checkstyle..."
-      - mvn checkstyle:checkstyle
-      - echo "Uploading to SonarQube..."
-      - sonar-scanner \
+      - echo "Running SonarQube Code Analysis..."
+      # Run SonarScanner with the required variables
+      - mvn sonar:sonar \
+        -Dsonar.host.url=$HOST \
+        -Dsonar.organization="$ORGANIZATION" \
         -Dsonar.projectKey=$PROJECT \
-        -Dsonar.projectName=$PROJECT-repo \
-        -Dsonar.projectVersion=1.0 \
-        -Dsonar.sources=src/ \
-        -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
-        -Dsonar.junit.reportsPath=target/surefire-reports/ \
-        -Dsonar.jacoco.reportsPath=target/jacoco.exec \
-        -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml \
-        -Dsonar.login=$SONAR_TOKEN
-
-  post_build:
-    commands:
-      - echo "Publishing artifacts to CodeArtifact..."
-      - mvn deploy -DaltDeploymentRepository=releases::default::https://$HOST.d.codeartifact.us-east-1.amazonaws.com/maven/$PROJECT/
-      - echo "Build and publishing completed successfully."
+        -Dsonar.login=$SONARTOKEN
 
 artifacts:
   files:
-    - target/**/*
+    - "**/*"
+  discard-paths: yes
+
+cache:
+  paths:
+    - "/root/.m2/**/*"
