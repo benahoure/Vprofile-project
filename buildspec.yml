@@ -1,20 +1,28 @@
 version: 0.2
 
+env:
+  parameter-store:
+    SONAR_TOKEN: "SONARTOKEN"
+    CODEARTIFACT_TOKEN: "CODEARTIFACT_TOKEN"
+    HOST: "HOST"
+    ORGANIZATION: "ORGANIZATION"
+    PROJECT: "PROJECT"
+
 phases:
+  install:
+    runtime-versions:
+      java: corretto11
+    commands:
+      - echo "Installing Maven and setting up CodeArtifact..."
+      - aws codeartifact login --tool maven --domain $HOST --domain-owner $ORGANIZATION --repository $PROJECT --region us-east-1
+      - mvn --version
+
   pre_build:
     commands:
-      - echo "Installing dependencies and retrieving environment variables from SSM Parameter Store..."
-      - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      - unzip awscliv2.zip
-      - sudo ./aws/install
-      - echo "Retrieving parameters from SSM..."
-      - export CODEARTIFACT_TOKEN=$(aws ssm get-parameter --name "CODEARTIFACT_TOKEN" --with-decryption --query "Parameter.Value" --output text)
-      - export HOST=$(aws ssm get-parameter --name "HOST" --query "Parameter.Value" --output text)
-      - export ORGANIZATION=$(aws ssm get-parameter --name "ORGANIZATION" --query "Parameter.Value" --output text)
-      - export PROJECT=$(aws ssm get-parameter --name "PROJECT" --query "Parameter.Value" --output text)
-      - export SONARTOKEN=$(aws ssm get-parameter --name "SONARTOKEN" --with-decryption --query "Parameter.Value" --output text)
-      - echo "Parameters retrieved: HOST=$HOST, ORGANIZATION=$ORGANIZATION, PROJECT=$PROJECT"
-
+      - echo "Preparing environment..."
+      - export SONAR_TOKEN=$(aws ssm get-parameter --name SONARTOKEN --with-decryption --query Parameter.Value --output text)
+      - export CODEARTIFACT_TOKEN=$(aws ssm get-parameter --name CODEARTIFACT_TOKEN --with-decryption --query Parameter.Value --output text)
+      - echo "Environment setup completed."
   build:
     commands:
       - echo "Running SonarQube Code Analysis..."
