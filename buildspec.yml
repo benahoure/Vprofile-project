@@ -2,11 +2,13 @@ version: 0.2
 
 env:
   parameter-store:
-    SONAR_TOKEN: "SONARTOKEN"
-    CODEARTIFACT_TOKEN: "CODEARTIFACT_TOKEN"
-    HOST: "HOST"
-    ORGANIZATION: "ORGANIZATION"
-    PROJECT: "PROJECT"
+    SONAR_TOKEN: "SONARTOKEN" # The SSM parameter name is SONARTOKEN
+    CODEARTIFACT_TOKEN: "CODEARTIFACT_TOKEN" # The SSM parameter name is CODEARTIFACT_TOKEN
+    HOST: "HOST" # The SSM parameter name is HOST
+    ORGANIZATION: "ORGANIZATION" # The SSM parameter name is ORGANIZATION
+    PROJECT: "PROJECT" # The SSM parameter name is PROJECT
+    CODEARTIFACT_DOMAIN: "/codeartifact/domain" # The SSM parameter name for CodeArtifact domain
+    CODEARTIFACT_OWNER: "/codeartifact/owner" # The SSM parameter name for CodeArtifact owner
 
 phases:
   install:
@@ -14,7 +16,7 @@ phases:
       java: corretto11
     commands:
       - echo "Installing Maven and setting up CodeArtifact..."
-      - export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain $HOST --domain-owner $ORGANIZATION --query authorizationToken --output text)
+      - export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain "$CODEARTIFACT_DOMAIN" --domain-owner "$CODEARTIFACT_OWNER" --query authorizationToken --output text)
       - |
         echo "<settings>
               <servers>
@@ -30,8 +32,7 @@ phases:
   pre_build:
     commands:
       - echo "Preparing environment..."
-      - export SONAR_TOKEN=$(aws ssm get-parameter --name SONAR_TOKEN --with-decryption --query Parameter.Value --output text)
-      - export CODEARTIFACT_TOKEN=$(aws ssm get-parameter --name CODEARTIFACT_TOKEN --with-decryption --query Parameter.Value --output text)
+      # The parameters will automatically be pulled from the SSM Parameter Store into environment variables
       - echo "Environment setup completed."
 
   build:
