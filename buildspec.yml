@@ -14,15 +14,26 @@ phases:
       java: corretto11
     commands:
       - echo "Installing Maven and setting up CodeArtifact..."
-      - aws codeartifact login --tool maven --domain $HOST --domain-owner $ORGANIZATION --repository $PROJECT --region us-east-1
+      - export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain $HOST --domain-owner $ORGANIZATION --query authorizationToken --output text)
+      - |
+        echo "<settings>
+              <servers>
+                <server>
+                  <id>codeartifact</id>
+                  <username>aws</username>
+                  <password>${CODEARTIFACT_AUTH_TOKEN}</password>
+                </server>
+              </servers>
+              </settings>" > /root/.m2/settings.xml
       - mvn --version
 
   pre_build:
     commands:
       - echo "Preparing environment..."
-      - export SONAR_TOKEN=$(aws ssm get-parameter --name SONARTOKEN --with-decryption --query Parameter.Value --output text)
+      - export SONAR_TOKEN=$(aws ssm get-parameter --name SONAR_TOKEN --with-decryption --query Parameter.Value --output text)
       - export CODEARTIFACT_TOKEN=$(aws ssm get-parameter --name CODEARTIFACT_TOKEN --with-decryption --query Parameter.Value --output text)
       - echo "Environment setup completed."
+
   build:
     commands:
       - echo "Running SonarQube Code Analysis..."
@@ -30,7 +41,7 @@ phases:
         -Dsonar.host.url=$HOST \
         -Dsonar.organization="$ORGANIZATION" \
         -Dsonar.projectKey=$PROJECT \
-        -Dsonar.login=$SONARTOKEN
+        -Dsonar.login=$SONAR_TOKEN
 
 artifacts:
   files:
