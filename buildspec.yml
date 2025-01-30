@@ -32,13 +32,14 @@ phases:
   pre_build:
     commands:
       - echo "Preparing environment..."
+      - mvn test
       # The parameters will automatically be pulled from the SSM Parameter Store into environment variables
       - echo "Environment setup completed."
 
   build:
     commands:
       - echo "Running SonarQube Code Analysis..."
-      - mvn sonar:sonar -Dsonar.host.url="$HOST" -Dsonar.organization="$ORGANIZATION" -Dsonar.projectKey="$PROJECT" -Dsonar.login="$SONAR_TOKEN"
+      - mvn sonar:sonar -Dsonar.login="$SONAR_TOKEN" -Dsonar.host.url="$HOST" -Dsonar.organization="$ORGANIZATION" -Dsonar.projectKey="$PROJECT"
 
 artifacts:
   files:
