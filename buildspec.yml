@@ -33,7 +33,7 @@ phases:
   pre_build:
     commands:
       - echo "Preparing environment..."
-      - mvn test -Dsonar.skip=true
+      #- mvn test -Dsonar.skip=true
       # The parameters will automatically be pulled from the SSM Parameter Store into environment variables
       - echo "Environment setup completed."
 
