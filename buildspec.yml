@@ -14,22 +14,7 @@ phases:
   install:
     runtime-versions:
       java: corretto11
-    commands:
-      - echo "Installing Maven and setting up CodeArtifact..."
-      - export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain "$CODEARTIFACT_DOMAIN" --domain-owner "$CODEARTIFACT_OWNER" --query authorizationToken --output text)
-      - |
-        echo "<settings>
-              <servers>
-                <server>
-                  <id>codeartifact</id>
-                  <username>aws</username>
-                  <password>${CODEARTIFACT_AUTH_TOKEN}</password>
-                </server>
-              </servers>
-              </settings>" > /root/.m2/settings.xml
-      - mvn --version
-      - echo "Validating POM file..."
-      - xmllint --noout pom.xml # Validate XML structure
+
   pre_build:
     commands:
       - echo "Preparing environment..."
@@ -39,8 +24,15 @@ phases:
 
   build:
     commands:
-      - echo "Running SonarQube Code Analysis..."
-      - mvn sonar:sonar -Dsonar.login="$SONAR_TOKEN" -Dsonar.host.url="$HOST" -Dsonar.organization="$ORGANIZATION" -Dsonar.projectKey="$PROJECT"
+      - echo "Running SonarCloud analysis with Maven..."
+      #  - mvn clean install -X
+      - mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+        -Dsonar.projectKey=$PROJECT \
+        -Dsonar.organization=$ORGANIZATION \
+        -Dsonar.login=$SONAR_TOKEN \
+        -Dsonar.host.url=$HOST \
+        # -Dsonar.codeartifact.token=$CODEARTIFACT_TOKEN
+        # -Dsonar.java.jdkHome=/usr/lib/jvm/java-17-openjdk-amd64  # Adjust if necessary
 
 artifacts:
   files:
