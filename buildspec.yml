@@ -28,7 +28,8 @@ phases:
               </servers>
               </settings>" > /root/.m2/settings.xml
       - mvn --version
-
+      - echo "Validating POM file..."
+      - xmllint --noout pom.xml # Validate XML structure
   pre_build:
     commands:
       - echo "Preparing environment..."

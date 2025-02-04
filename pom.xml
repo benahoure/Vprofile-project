@@ -1,21 +1,30 @@
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <!-- Existing configuration remains same until properties section -->
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.visualpathit</groupId>
+    <artifactId>vprofile</artifactId>
+    <packaging>war</packaging>
+    <version>v2</version>
+    <name>Visualpathit VProfile Webapp</name>
+    <url>http://maven.apache.org</url>
+
     <properties>
-        <!-- Update Java version to match Corretto 11 -->
+        <!-- Keep ALL your original properties here -->
+        <spring.version>4.2.0.RELEASE</spring.version>
+        <!-- Add Java 11 properties -->
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <!-- Add Surefire plugin version -->
         <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
         <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
-        <!-- Keep existing versions below -->
     </properties>
 
-    <!-- Existing dependencies remain the same -->
+    <!-- Keep ALL your original dependencies here -->
 
     <build>
         <plugins>
-            <!-- Add Maven Surefire Plugin configuration -->
+            <!-- Add plugins from previous suggestions -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -24,42 +33,7 @@
                     <argLine>-Xmx1024m</argLine>
                 </configuration>
             </plugin>
-
-            <!-- Update Jacoco plugin -->
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>${jacoco-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>jacoco-initialize</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>jacoco-site</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Add compiler plugin for Java 11 -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                </configuration>
-            </plugin>
-
-            <!-- Existing jetty plugin remains -->
+            <!-- Other plugins -->
         </plugins>
     </build>
 </project>
