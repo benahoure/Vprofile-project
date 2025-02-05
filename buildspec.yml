@@ -13,27 +13,20 @@ env:
 phases:
   install:
     runtime-versions:
-      java: corretto11
+      java: corretto17
 
   pre_build:
     commands:
-      - echo "Preparing environment..."
-      #- mvn test -Dsonar.skip=true
-      # The parameters will automatically be pulled from the SSM Parameter Store into environment variables
-      - echo "Environment setup completed."
+      - aws codeartifact login --tool mvn --domain $(aws ssm get-parameter --name "/codeartifact/domain" --query Parameter.Value --output text) --domain-owner $(aws ssm get-parameter --name "/codeartifact/owner" --query Parameter.Value --output text)
 
   build:
     commands:
-      - echo "Running SonarCloud analysis with Maven..."
-      #  - mvn clean install -X
-      - mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+      - mvn clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
         -Dsonar.projectKey=$PROJECT \
         -Dsonar.organization=$ORGANIZATION \
-        -Dsonar.login=$SONAR_TOKEN \
         -Dsonar.host.url=$HOST \
-        # -Dsonar.codeartifact.token=$CODEARTIFACT_TOKEN
-        # -Dsonar.java.jdkHome=/usr/lib/jvm/java-17-openjdk-amd64  # Adjust if necessary
-
+        -Dsonar.login=$SONAR_TOKEN \
+        -Dsonar.java.jdkHome=/usr/lib/jvm/java-17-amazon-corretto.x86_64
 artifacts:
   files:
     - "**/*"
